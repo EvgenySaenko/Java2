@@ -97,10 +97,6 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             log.append(msg + "\n");
             try {
                 logMessage = new FileWriter("logMessage.txt", true);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            try {
                 logMessage.write("\n"+ userList.getName()+": "+msg);
                 logMessage.flush();
                 logMessage.close();
