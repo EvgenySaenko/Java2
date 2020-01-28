@@ -3,51 +3,48 @@ package Lesson03;
 import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PhoneBook {
 
-    ArrayList<Person> list = new ArrayList<>();
-    private Person ivanov = new Person("89221110102", "ivanov@mai.ru");
-    private Person ivanov2 = new Person("89665550105", "ivan545@list.ru");
-    private Person ivanov3 = new Person("89443330104", "ivan777777@lb.ru");
-    private Person petrov = new Person("89332220103", "petrov@mai.ru");
-    private Person smirnov = new Person("89443330104", "smirnov@mai.ru");
-    private Person rodionov = new Person("89554440105", "rodionov@mai.ru");
+    private final HashMap<String, ArrayList<Person>> entries = new HashMap<>();
 
-    Map<String, Person> phonebook = new HashMap<>();
+    public void add(String name, String phone, String mail) {
+        if (entries.containsKey(name)) {//есть ли пара с таким именем в хэшмапе
+            ArrayList<Person> persons = entries.get(name);//создаем список и присваеваем этому имени
+            // (буквально достает всех людей с таким именем из хэшмапа)
 
-
-    PhoneBook() {
-        this.phonebook.put("Ivanov",ivanov);
-        this.phonebook.put("Petrov", petrov);
-        this.phonebook.put("Smirnov", smirnov);
-        this.phonebook.put("Rodionov", rodionov);
+            persons.add(new Person(phone, mail));         //добавляем в список с этим именем еще данные
+        } else {
+            ArrayList<Person> persons = new ArrayList<>();//если нету с таким именем в хашмапе
+            persons.add(new Person(phone, mail));        //создаем новый список и добавляем данные
+            entries.put(name, persons);                  //добавляем в хэшмап, имя это и список с данными которые только что создали
+        }
     }
 
 
-    @Override
-    public String toString() {
-        return "PhoneBook\n" +
-                "Ivanov = " + ivanov + " " + ivanov2 + " " + ivanov3 + " \n" +
-                "Petrov = " + petrov + " \n" +
-                "Smirnov = " + smirnov + " \n" +
-                "Rodionov = " + rodionov + " \n" +
-                '}';
+    public ArrayList<String> getPhones(String name) {
+        if (!entries.containsKey(name)) return null;
+        ArrayList<Person> persons = entries.get(name);//достать существующих людей из телефонной книги
+        ArrayList<String> result = new ArrayList<>();//создать пустой список и переложить в него
+        for (int i = 0; i < persons.size(); i++) {    //все телефоны которые мы достали кладем в result
+            result.add(persons.get(i).phone);
+        }
+        return result;
     }
 
-    //метод для поиска телефона по фамилии(ключу)нужно учесть однофамильцев
-    public void searchPhone(String str) {
-        if (phonebook.containsKey(str)) {
-            System.out.println(phonebook.get(str).getPhone());//говорим, книга дай мне обьект по ключу, и вызываем у него гетер
-        } else
-            System.out.println("Такого человека в системе не обнаружено");
+    //метод тоже самое делает что и верхник
+    public ArrayList<String> getE_mail(String name) {
+        if (!entries.containsKey(name)) return null;
+        return entries.get(name).stream().map(person -> person.e_mail).collect(Collectors.toCollection(ArrayList::new));
+        //у хэшмапа мы берем(name). превращаем его в поток,сопоставляем  из этого потока берем каждого персона и берем у него емейл
+        //собираем(коллект) в коллецию с новым листом)
+        //map забирает из каждого персона -свойство емайл
     }
 
-    //метод для поиска е-мейла по фамилии(ключу)нужно учесть однофамильцев
-    public void searcheMail(String str) {
-        if (phonebook.containsKey(str)) {
-            System.out.println(phonebook.get(str).getE_mail());//говорим, книга дай мне обьект по ключу, и вызываем у него гетер
-        } else
-            System.out.println("Такого человека в системе не обнаружено");
-    }
+
 }
+
+
+
+

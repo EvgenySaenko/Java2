@@ -15,6 +15,10 @@ public class Main {
         }
         System.out.println(set);
     }
+    //аналог верхнего метода
+    private static TreeSet<String> getWords(String[]arr){
+        return new TreeSet<>(Arrays.asList(arr));
+    }
 
     //Задание 1 пункт 2
     //создадим метод который считает сколько раз встречается каждое слово
@@ -37,9 +41,20 @@ public class Main {
         String[] block = str.split(" ");
         countWords(block);
         PhoneBook phoneBook = new PhoneBook();
-        System.out.println(phoneBook);
-        phoneBook.searchPhone("Smirnov");
-        phoneBook.searcheMail("Smirnov");
+
+        phoneBook.add("Ivanov","89221110102", "ivanov@mai.ru");
+        phoneBook.add("Ivanov","89665550105", "ivan545@list.ru");
+        phoneBook.add("Ivanov","89443330104", "ivan777777@lb.ru");
+        phoneBook.add("petrov","89332220103", "petrov@mai.ru");
+        phoneBook.add("smirnov","89554440105", "rodionov@mai.ru");
+
+        System.out.println("email ivanov -"+ phoneBook.getE_mail("Ivanov"));
+        System.out.println("email petrov -"+ phoneBook.getE_mail("petrov"));
+
+        System.out.println("email ivanov -"+ phoneBook.getPhones("Ivanov"));
+        System.out.println("email petrov -"+ phoneBook.getPhones("petrov"));
+
+
 
     }
 }
