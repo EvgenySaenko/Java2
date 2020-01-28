@@ -4,14 +4,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 
-public class ClientGUI extends JFrame implements ActionListener,Thread.UncaughtExceptionHandler {
+public class ClientGUI extends JFrame implements ActionListener, Thread.UncaughtExceptionHandler {
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 300;
 
     private final JTextArea log = new JTextArea();
-    private final JPanel panelTop = new JPanel(new GridLayout(2,3));
+    private final JPanel panelTop = new JPanel(new GridLayout(2, 3));
     private final JTextField tfIPAddress = new JTextField("127.0.0.1");
     private final JTextField tfPort = new JTextField("8189");
 
@@ -25,25 +28,25 @@ public class ClientGUI extends JFrame implements ActionListener,Thread.UncaughtE
     private final JTextField tfMessage = new JTextField();
     private final JButton btnSend = new JButton("Send");
 
-    private final JList<String>userList = new JList<>();//создадим список чтоб хранить список пользователей
+    private static FileWriter logMessage;
+
+    private final JList<String> userList = new JList<>();//создадим список чтоб хранить список пользователей
 
 
-
-
-    private ClientGUI(){
+    private ClientGUI() {
         Thread.setDefaultUncaughtExceptionHandler(this::uncaughtException);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);//по центру экрана
-        setSize(WIDTH,HEIGHT);
+        setSize(WIDTH, HEIGHT);
 //        log.setEditable(false);
         JScrollPane scrollLog = new JScrollPane(log);//создали скрол панель и добавили в него лог(куда пишем сообщения)
         JScrollPane scrollUser = new JScrollPane(userList);//скрол панель для пользователей и добавили в нее список с пользователями
-        String [] users = {"user1","user2","user3","user4","user5"};//создали массив пользователей
+        String[] users = {"user1", "user2", "user3", "user4", "user5"};//создали массив пользователей
         userList.setListData(users);//добавили в наш список-массив с пользователями
-        scrollUser.setPreferredSize(new Dimension(100,0));
+        scrollUser.setPreferredSize(new Dimension(100, 0));
         cbAlwaysOnTop.addActionListener(this::actionPerformed);
-//        tfMessage.addActionListener(this::actionPerformed);
-//        btnSend.addActionListener(this::actionPerformed);
+        tfMessage.addActionListener(this::actionPerformed);
+        btnSend.addActionListener(this::actionPerformed);
 
         panelTop.add(tfIPAddress);//на верхнюю панель добавляем текст адрес ИП, Порт,Алвейсонтоп
         panelTop.add(tfPort);
@@ -53,11 +56,11 @@ public class ClientGUI extends JFrame implements ActionListener,Thread.UncaughtE
         panelTop.add(tfPassword);
         panelTop.add(btnLogin);
 
-        panelBottom.add(btnDisconnect,BorderLayout.WEST);//на нижнюю панельку кнопку дисконект,
+        panelBottom.add(btnDisconnect, BorderLayout.WEST);//на нижнюю панельку кнопку дисконект,
         panelBottom.add(tfMessage, BorderLayout.CENTER);//поля текста с сообщение текущим которое будет вводить пользователь
-        panelBottom.add(btnSend,BorderLayout.EAST);//и кнопку отправки сообщения
+        panelBottom.add(btnSend, BorderLayout.EAST);//и кнопку отправки сообщения
 
-        add(scrollLog,BorderLayout.CENTER);//добавили скрол панель
+        add(scrollLog, BorderLayout.CENTER);//добавили скрол панель
         add(scrollUser, BorderLayout.EAST);//добавили скрол панель справа
         add(panelTop, BorderLayout.NORTH);
         add(panelBottom, BorderLayout.SOUTH);
@@ -77,6 +80,8 @@ public class ClientGUI extends JFrame implements ActionListener,Thread.UncaughtE
         });
     }
 
+
+
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
@@ -87,6 +92,24 @@ public class ClientGUI extends JFrame implements ActionListener,Thread.UncaughtE
                 throw new RuntimeException("Unknown sourse: " + src);
             }
         }
+        if (src == tfMessage || src == btnSend) {
+//            System.out.println("Сообщение "+ tfMessage.getText());
+            String msg = tfMessage.getText();
+            log.append(msg + "\n");
+            try {
+                logMessage = new FileWriter("logMessage.txt", true);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            try {
+                logMessage.write("\n"+ userList.getName()+": "+msg);
+                logMessage.flush();
+                logMessage.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            tfMessage.setText(null);
+        }
 
     }
 
@@ -95,10 +118,10 @@ public class ClientGUI extends JFrame implements ActionListener,Thread.UncaughtE
         e.printStackTrace();
         String msg;
         StackTraceElement[] ste = e.getStackTrace();//создаем массив элементов и достаем его из Стэк трейса
-        msg = "Exeption in "+ t.getName() +" "+ e.getClass().getCanonicalName() + ": "+ e.getMessage()+" \n\t at "+ste[0];
+        msg = "Exeption in " + t.getName() + " " + e.getClass().getCanonicalName() + ": " + e.getMessage() + " \n\t at " + ste[0];
         //JOptionPane - позволяет выкидывать окошки, отрисовываемся на основе нас(this),
         // сообщение наше,тайтл,и выбираем вид панельки которая будет выкидываться ее вид
-        JOptionPane.showMessageDialog(this,msg,"Exeption",JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, msg, "Exeption", JOptionPane.ERROR_MESSAGE);
         System.exit(1);//ставим выход из системы после как пользователь нажмет на "ок" прочитав панель ошибки-
         // программа свернется по (1)- то есть екстренно, при нормальном (0)
     }
