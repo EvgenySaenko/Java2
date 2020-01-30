@@ -78,8 +78,20 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             }
         });
     }
-
-
+    //создадим метод запись сообщения в логчата(дублирующий запись в текстовый файл)
+    public void recordInLog(JTextField tf){
+        String msg = tf.getText();
+        log.append(msg + "\n");
+        try {
+            logMessage = new FileWriter("logMessage.txt", true);
+            logMessage.write("\n"+ userList.getName()+": "+msg);
+            logMessage.flush();
+            logMessage.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        tf.setText(null);
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -93,17 +105,7 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         }
         if (src == tfMessage || src == btnSend) {
 //            System.out.println("Сообщение "+ tfMessage.getText());
-            String msg = tfMessage.getText();
-            log.append(msg + "\n");
-            try {
-                logMessage = new FileWriter("logMessage.txt", true);
-                logMessage.write("\n"+ userList.getName()+": "+msg);
-                logMessage.flush();
-                logMessage.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            tfMessage.setText(null);
+            recordInLog(tfMessage);
         }
 
     }
