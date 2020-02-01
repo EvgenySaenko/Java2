@@ -1,4 +1,4 @@
-package Lesson04;
+package Lesson04.chat;
 
 import javax.swing.*;
 import java.awt.*;

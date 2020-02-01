@@ -1,10 +1,9 @@
-package Lesson04;
+package Lesson04.chat;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -28,9 +27,9 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JTextField tfMessage = new JTextField();
     private final JButton btnSend = new JButton("Send");
 
-    private static FileWriter logMessage;
 
     private final JList<String> userList = new JList<>();//создадим список чтоб хранить список пользователей
+    private boolean shownIoErrors = false;
 
 
     private ClientGUI() {
@@ -69,7 +68,6 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     }
 
 
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {//Event Dispatching Thread - поток управляющий событиями
             @Override                            //все что связано со swing должно выполняться в этом потоке
@@ -78,47 +76,76 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
             }
         });
     }
-    //создадим метод запись сообщения в логчата(дублирующий запись в текстовый файл)
-    public void recordInLog(JTextField tf){
-        String msg = tf.getText();
-        log.append(msg + "\n");
-        try {
-            logMessage = new FileWriter("logMessage.txt", true);
-            logMessage.write("\n"+ userList.getName()+": "+msg);
-            logMessage.flush();
-            logMessage.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        tf.setText(null);
-    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
         if (src == cbAlwaysOnTop) {
-            if (src == cbAlwaysOnTop) {
-                setAlwaysOnTop(cbAlwaysOnTop.isSelected());
-            } else {
-                throw new RuntimeException("Unknown sourse: " + src);
+            setAlwaysOnTop(cbAlwaysOnTop.isSelected());
+        } else if (src == tfMessage || src == btnSend) {
+            sendMessage();
+        } else
+            throw new RuntimeException("Unknown sourse: " + src);
+    }
+
+    private void sendMessage() {
+        String msg = tfMessage.getText();//достаем сообщение которое было написано
+        String username = tfLogin.getText();//и юсернейм
+        if ("".equals(msg)) return;          //сравниваем если сообщение пустое то ничего не делаем-выход из метода
+        tfMessage.setText(null);             //
+        tfMessage.requestFocusInWindow();   //возвращаем фокус к текстфилду
+        putLog(String.format("%s: %s", username, msg));//кладем сообщение  в лог в окошко
+        wrtMsgToLogFile(msg, username);          //кладем его же в файл
+    }
+
+
+    private void wrtMsgToLogFile(String msg, String username) {
+        //в трай с ресурсами (он принимает некий объект класса который реализует интерфейс клоузебл)
+        // поток открывается записывает файл и трай с ресурсами автоматически закрывает поток
+        try (FileWriter out = new FileWriter("logMessage.txt", true)) {
+            out.write(username + ": " + msg + "\n");
+            out.flush();        //выполняет все чтобыло в буфере и очищает его
+        } catch (IOException e) {
+            if (!shownIoErrors) {
+                shownIoErrors = true;
+                showException(Thread.currentThread(), e);
             }
         }
-        if (src == tfMessage || src == btnSend) {
-//            System.out.println("Сообщение "+ tfMessage.getText());
-            recordInLog(tfMessage);
+    }
+
+
+    private void putLog(String msg) {
+        if ("".equals(msg)) return;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                log.append(msg + "\n");
+                log.setCaretPosition(log.getDocument().getLength());
+            }
+        });
+    }
+
+
+    //метод выводит ошибку пользователю
+    private void showException(Thread t, Throwable e) {
+        String msg;
+        StackTraceElement[] ste = e.getStackTrace();//создаем массив элементов и достаем его из Стэк трейса
+        if (ste.length == 0)
+            msg = "Empty Stacktrace";
+        else {
+            msg = "Exception in " + t.getName() + " " + e.getClass().getCanonicalName() + ": " +
+                    e.getMessage() + "\n\t at " + ste[0];
+            //JOptionPane - позволяет выкидывать окошки, отрисовываемся на основе нас(this),
+            // сообщение наше,тайтл,и выбираем вид панельки которая будет выкидываться ее вид
         }
+        JOptionPane.showMessageDialog(null, msg, "Exception", JOptionPane.ERROR_MESSAGE);
 
     }
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         e.printStackTrace();
-        String msg;
-        StackTraceElement[] ste = e.getStackTrace();//создаем массив элементов и достаем его из Стэк трейса
-        msg = "Exeption in " + t.getName() + " " + e.getClass().getCanonicalName() + ": " + e.getMessage() + " \n\t at " + ste[0];
-        //JOptionPane - позволяет выкидывать окошки, отрисовываемся на основе нас(this),
-        // сообщение наше,тайтл,и выбираем вид панельки которая будет выкидываться ее вид
-        JOptionPane.showMessageDialog(this, msg, "Exeption", JOptionPane.ERROR_MESSAGE);
+        showException(t, e);
         System.exit(1);//ставим выход из системы после как пользователь нажмет на "ок" прочитав панель ошибки-
         // программа свернется по (1)- то есть екстренно, при нормальном (0)
     }
