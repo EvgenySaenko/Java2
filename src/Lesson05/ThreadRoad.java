@@ -18,12 +18,14 @@ public class ThreadRoad{
             arr[i] = 1;
         }
         long startTime = System.currentTimeMillis();//стартанули время
+        float summa = 0;
         for (int i = 0; i < arr.length; i++) {
             arr[i] = (float)(arr[i] * Math.sin(0.2f + i / 5) * Math.cos(0.2f + i / 5) * Math.cos(0.4f + i / 2));
+            summa += arr[i];
         }
         long stopTime = System.currentTimeMillis();
         float intervalTime = (stopTime - startTime)/1000f;
-        System.out.println("Время обработки одним потоком: "+ intervalTime+" секунд(милисекунд)");
+        System.out.println("Время обработки одним потоком: "+ intervalTime+" секунд(милисекунд)"+summa);
     }
 
     //метод обработки двумя потоками
@@ -34,25 +36,14 @@ public class ThreadRoad{
         long startTime = System.currentTimeMillis();//стартанули время
         System.arraycopy(arr, 0, one, 0, h);  //скопируем содержимое первой половины массива arr в массив one
         System.arraycopy(arr, h, two, 0, h);  //скопируем содержимое второй половины массива arr в массив two
-        Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                calculationThread(one);
-            }
-        });
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                calculationThread(two);
-            }
-        });
+
+        CalcThread threadOne = new CalcThread(one,0);
+        CalcThread threadTwo = new CalcThread(two,h);
         System.out.println("Разделили массивы - Потоки начали вычисление");
-        t1.start();
-        t2.start();
 
         try {
-            t1.join();
-            t2.join();
+            threadOne.join();
+            threadTwo.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -61,16 +52,13 @@ public class ThreadRoad{
         //запоняем обратно массив уже посчитаный в потоках(собираем его)
         System.arraycopy(one, 0, arr, 0, h);
         System.arraycopy(two, 0, arr, h, h);
+        float result = 0;
+        for (int i = 0; i < arr.length; i++) {
+            result += arr[i];
+        }
         long stopTime = System.currentTimeMillis();
         float intervalTime = (stopTime - startTime)/1000f;
-        System.out.println("Время обработки двумя потоками: "+ intervalTime+" секунд(милисекунд)");
-    }
-
-    //метод который получает массив и считает eго
-    private static void calculationThread(float [] x){
-        for (int i = 0; i < x.length; i++) {
-            x[i] = (float)(x[i] * Math.sin(0.2f + i / 5) * Math.cos(0.2f + i / 5) * Math.cos(0.4f + i / 2));
-        }
+        System.out.println("Время обработки двумя потоками: "+ intervalTime+" секунд(милисекунд)" +result);
     }
 
     public static void main(String[] args) {
